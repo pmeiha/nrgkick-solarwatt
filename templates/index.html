@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NRGkick solar control</title>
+    <link href="{{ url_for('static', filename='styles/style.css') }}" rel="stylesheet" />
+    <meta http-equiv="refresh" content="{{ timeout }}; URL={{ url_for('index') }}"/>
+</head>
+<body>
+    <h1>NRGkick solar control</h1>
+    <table>
+    <tr><th></th><th></th></tr>
+    <tr><td>freePower</td><td>{{ freePower }}</td></tr>
+    <tr><td>freePowerSave</td><td>{{ freePowerSave }}</td></tr>
+    <tr><td>current</td><td>{{ current }}</td></tr>
+    <tr><td>pause</td><td>{{ pause }}</td></tr>
+    <tr><td>limit</td><td>{{ limit }}</td></tr>
+    <tr><td>phase</td><td>{{ phase }}</td></tr>
+    <tr><td>timeout</td><td>{{ timeout }}</td></tr>
+    <tr>
+        <td><form action="{{ url_for('set_debug') }}" method="get"><button type="submit" id="debug" name="action" value="debug">Debug</button></form>
+        </td><td>{{ debug }}</td>
+    </tr><tr>
+        <td><form action="{{ url_for('set_manual') }}" method="get"><button type="submit" id="Manual" name="action" value="Manual">Manual</button></form>
+        </td><td>{{ manual }}</td>
+    </tr>
+    </table>
+
+
+</body>
+</html>

@@ -1,0 +1,38 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    padding: 1rem;
+    background-color: #333;
+    color: whitesmoke;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    font-size: 10px;
+}
+
+input, button, select {
+    font-size: 1rem;
+    padding: 0.1rem;
+    border-radius: 5px;
+}
+
+table, th, td {
+    border: 0px solid;
+}
+
+table.edit_outer,
+th.edit_outer,
+td.edit_outer {
+    border: 1px solid;
+}
+
+
+tr.specal {
+    color: burlywood;
+}
