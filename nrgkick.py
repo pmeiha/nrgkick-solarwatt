@@ -5,10 +5,10 @@ import os
 import sys
 import requests
 import json
-import rrdtool
+# import rrdtool
 import threading
-import time
-import datetime
+# import time
+# import datetime
 
 app = Flask(__name__)
 
