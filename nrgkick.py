@@ -285,14 +285,13 @@ def set_debug():
                            debug = gDebug,
                            freePower = gFreePower,
                            freePowerSave = gFreePowerSave,
+                           current = gCurrent,
                            pause = gPause,
                            limit = gLimit,
                            phase = gPhase,
-                           manual = gManual,
                            manual = gManual,
                            timeout=60
     )                   
 
 if __name__ == "__main__":
     serve(app, host="0.0.0.0", port=8001)
-
