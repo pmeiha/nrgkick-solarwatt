@@ -285,6 +285,10 @@ def set_debug():
                            debug = gDebug,
                            freePower = gFreePower,
                            freePowerSave = gFreePowerSave,
+                           pause = gPause,
+                           limit = gLimit,
+                           phase = gPhase,
+                           manual = gManual,
                            manual = gManual,
                            timeout=60
     )                   
