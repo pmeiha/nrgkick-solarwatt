@@ -260,18 +260,8 @@ def set_manual():
 
     waitFlag.set()
 
-    return render_template('index.html',
-                           debug = gDebug,
-                           freePower = gFreePower,
-                           freePowerSave = gFreePowerSave,
-                           current = gCurrent,
-                           pause = gPause,
-                           limit = gLimit,
-                           phase = gPhase,
-                           manual = gManual,
-                           timeout=60
-    )                   
-
+    return index()
+    
 @app.route('/set_debug')
 def set_debug():
 
@@ -281,17 +271,7 @@ def set_debug():
 
     waitFlag.set()
 
-    return render_template('index.html',
-                           debug = gDebug,
-                           freePower = gFreePower,
-                           freePowerSave = gFreePowerSave,
-                           current = gCurrent,
-                           pause = gPause,
-                           limit = gLimit,
-                           phase = gPhase,
-                           manual = gManual,
-                           timeout=60
-    )                   
+    return index()             
 
 if __name__ == "__main__":
     serve(app, host="0.0.0.0", port=8001)
