@@ -4,6 +4,7 @@ from waitress import serve
 import os
 import sys
 import requests
+import math
 import json
 # import rrdtool
 import threading
@@ -14,8 +15,8 @@ app = Flask(__name__)
 
 gFreePowerSave = 0
 gFreePower = 0
-gManual = False
 gBackgroundLoop = True
+gManTime = 0
 gDebug = 0
 gCurrent = 0 
 gPause = 0
@@ -126,42 +127,50 @@ def sendNRGkick(aurl=''):
 
 def switchPhase(freePower=0):
 
+    global gPause
+
     if freePower >= gPower['P3']['min']:
         freeA = round( freePower / gnominalVolt / 3, 1)
         if freeA > gmaxAmpere:
             freeA = gmaxAmpere
         control = sendNRGkick(f'/control?current_set={str(freeA)}&phase_count=3&charge_pause=0')
+        gPause = 0
         
     elif freePower >= gPower['P2']['min']:
         freeA = round( freePower / gnominalVolt / 2, 1)
         if freeA > gmaxAmpere:
             freeA = gmaxAmpere
         control = sendNRGkick(f'/control?current_set={str(freeA)}&phase_count=2&charge_pause=0')
+        gPause = 0
 
     elif freePower >= gPower['P1']['min']:
         freeA = round( freePower / gnominalVolt / 1, 1)
         if freeA > gmaxAmpere:
             freeA = gmaxAmpere
         control = sendNRGkick(f'/control?current_set={str(freeA)}&phase_count=1&charge_pause=0')
+        gPause = 0
 
     else:    
         # freeA = round( freePower / gnominalVolt / 3, 1)
         control = sendNRGkick(f'/control?charge_pause=1')
+        gPause = 1
 
     return control
 
-def setNRGkick(freePower=0, manual=False):
+def setNRGkick(freePower=0):
     
     global gCurrent
     global gPause
     global gLimit
     global gPhase
+    global gManTime
 
-    if manual:
-        printdebug(1,'manual Mode')        
+    if gManTime > time.time():
+        printdebug(1,'manual Mode')
         control = switchPhase(gPower['P3']['max'])
 
     else:
+        gManTime = 0
         control = sendNRGkick('/values?powerflow')
         if control is not None:
             allreadyUsed = control['powerflow']['total_active_power']
@@ -200,18 +209,6 @@ def setNRGkick(freePower=0, manual=False):
             elif control['phase_count'] == 3:    
                 control = switchPhase(freePower)
 
-                '''
-                if freePower < gPower['P3']['min']:
-                    control = switchPhase(freePower)
-
-                elif freePower > gPower['P3']['max']:
-                    control = switchPhase(freePower)
-
-                else:        
-                    freeA = round( freePower / gnominalVolt / 3, 1)
-                    control = sendNRGkick(f'/control?current_set={str(freeA)}')
-                '''
-
     control = sendNRGkick('/control')
     if control is not None:
         gCurrent = control['current_set']
@@ -226,7 +223,6 @@ def backgroundTask(loop=True):
     global gBackgroundLoop
     global gFreePowerSave
     global gFreePower
-    global gManual
     global gPowerOut
     global gPowerIn
     global gPowerProduced
@@ -249,7 +245,7 @@ def backgroundTask(loop=True):
         gFreePower = round(( freePower + gFreePowerSave ) / 2, 1)
         printdebug(0, f'free {freePower} save {gFreePowerSave} freePower everage is: {gFreePower}')
 
-        setNRGkick(gFreePower, gManual)
+        setNRGkick(gFreePower)
 
         waitFlag.clear()
 
@@ -275,6 +271,13 @@ print('curr_thread',curr_thread)
 @app.route('/index')
 def index():
 
+    aTime = time.time()
+    if gManTime > aTime:
+        t = gManTime - aTime
+        ManTime = f'{int(t/3600)}:{int(math.fmod(t,3600)/60):2}'
+    else:
+        ManTime = "0:00"    
+
     return render_template('index.html',
                            maxA = gmaxAmpere,
                            minA = gminAmpere,
@@ -290,22 +293,26 @@ def index():
                            phase = gPhase,
                            timeout=60,
                            debug = gDebug,
-                           manual = gManual,
+                           manual = ManTime,
     )                   
 
 @app.route('/set_manual')
 def set_manual():
 
-    global gManual
+    global gManTime
 
-    if gManual:
-        gManual = False
+    aTime = time.time()
+
+    if gManTime > aTime:
         control = switchPhase(0)
-        printdebug(0,f'set_manual Control {control}')
+        printdebug(0,f'set_manual off Control {control}')
         time.sleep(10)
+        gManTime = 0
         
     else:
-        gManual = True
+        control = switchPhase(gPower['P3']['max'])
+        printdebug(0,f'set_manual on Control {control}')
+        gManTime = time.time() + 86400
 
     waitFlag.set()
 
