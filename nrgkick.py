@@ -26,7 +26,7 @@ gPowerIn = 0
 gPowerProduced = 0
 
 gminAmpere = 6
-gmaxAmpere = 10
+gmaxAmpere = 12
 gnominalVolt = 240
 
 gPower = {
