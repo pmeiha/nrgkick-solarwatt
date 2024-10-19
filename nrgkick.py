@@ -7,7 +7,7 @@ import requests
 import json
 # import rrdtool
 import threading
-# import time
+import time
 # import datetime
 
 app = Flask(__name__)
@@ -21,26 +21,66 @@ gCurrent = 0
 gPause = 0
 gLimit = 0
 gPhase = 0
+gPowerOut = 0
+gPowerIn = 0
+gPowerProduced = 0
 
-minimalPower   = 1440 # 6 * 240 
-maximalPowerP1 = 2880 # 12 * 240
-minimalPowerP2 = 2880 # 6 * 240 * 2
-maximalPowerP2 = 5760 # 12 * 240 * 2
-minimalPowerP3 = 4320 # 6 * 240 * 3
-maximalPowerP3 = 8640 # 12 * 240 * 3
+gminAmpere = 6
+gmaxAmpere = 10
+gnominalVolt = 240
+
+gPower = {
+    'P1': {
+        'min':gminAmpere * gnominalVolt,
+        'max':gmaxAmpere * gnominalVolt
+    },
+    'P2' : {
+        'min':gminAmpere * gnominalVolt * 2,
+        'max':gmaxAmpere * gnominalVolt * 2
+    },
+    'P3' : {
+        'min':gminAmpere * gnominalVolt * 3,
+        'max':gmaxAmpere * gnominalVolt * 3
+    }      
+}
 
 NRGkick = 'http://nrgkick.i.pmei.ch'
 SolarWatt = 'http://kiwigrid.i.pmei.ch/rest/kiwigrid/wizard/devices'
 
 waitFlag = threading.Event()
 
+# set amprere to power
+def setAmpere(max = 12, min = 6):
+
+    global gminAmpere
+    global gmaxAmpere
+    global gnominalVolt
+    global gPower
+    
+    if max > 16:
+        max = 16
+
+    if min < 6:
+        min = 6
+
+    gmaxAmpere = max
+    gminAmpere = min
+    gPower['P1']['min'] = gminAmpere * gnominalVolt #1440 # 6 * 240 
+    gPower['P1']['max'] = gmaxAmpere * gnominalVolt #2880 # 12 * 240
+    gPower['P2']['min'] = gminAmpere * gnominalVolt * 2 #2880 # 6 * 240 * 2
+    gPower['P2']['max'] = gmaxAmpere * gnominalVolt * 2 #5760 # 12 * 240 * 2
+    gPower['P3']['min'] = gminAmpere * gnominalVolt * 3 #4320 # 6 * 240 * 3
+    gPower['P3']['max'] = gmaxAmpere * gnominalVolt * 3 #8640 # 12 * 240 * 3
+
+# print debug messages
 def printdebug(level=0,message=''):
 
     global gDebug
 
     if level <= gDebug:
         print(message)
- 
+
+# get Json data from URL
 def fetchJsonData(url):
     try:
         response = requests.get(url)
@@ -56,29 +96,13 @@ def fetchJsonData(url):
         printdebug(0,f'JSON data request not successful!. {url}')
         return None
 
-def getLocation(jsonContent=None):
-    retValue = ""
-    if jsonContent is not None:
-        for i in jsonContent['result']['items']:
-            for x in i['deviceModel']:
-                if x['deviceClass'] == 'com.kiwigrid.devices.location.Location':
-                    retValue = i['guid']
-
-    return retValue
-
-def getItem(jsonContent=None, itemGuid=""):
-    retValue = None
-    if jsonContent is not None:
-        for i in jsonContent['result']['items']:
-            if  i['guid'] == itemGuid:
-                retValue = i
-                break
-
-    return retValue
-
+# get powervaluese form PV
 def getFreePower(url=''):
 
-    freePower = 0
+    PowerOut = 0
+    PowerIn = 0
+    PowerProduced = 0
+
     # get file from device
     json_file_content = fetchJsonData(url)
 
@@ -86,9 +110,11 @@ def getFreePower(url=''):
     if json_file_content is not None:
         for item in json_file_content['result']['items']:
             if item['tagValues']['IdName']['value'] == 'Haus':
-                freePower = item['tagValues']['PowerOut']['value']
+                PowerOut = item['tagValues']['PowerOut']['value']
+                PowerIn  = item['tagValues']['PowerIn']['value']
+                PowerProduced = item['tagValues']['PowerProduced']['value']
 
-    return freePower - 500
+    return PowerOut, PowerIn, PowerProduced
 
 def sendNRGkick(aurl=''):
 
@@ -100,20 +126,26 @@ def sendNRGkick(aurl=''):
 
 def switchPhase(freePower=0):
 
-    if freePower >= minimalPowerP3:
-        freeA = round( freePower / 240 / 3, 1)
+    if freePower >= gPower['P3']['min']:
+        freeA = round( freePower / gnominalVolt / 3, 1)
+        if freeA > gmaxAmpere:
+            freeA = gmaxAmpere
         control = sendNRGkick(f'/control?current_set={str(freeA)}&phase_count=3&charge_pause=0')
         
-    elif freePower >= minimalPowerP2:
-        freeA = round( freePower / 240 / 2, 1)
+    elif freePower >= gPower['P2']['min']:
+        freeA = round( freePower / gnominalVolt / 2, 1)
+        if freeA > gmaxAmpere:
+            freeA = gmaxAmpere
         control = sendNRGkick(f'/control?current_set={str(freeA)}&phase_count=2&charge_pause=0')
 
-    elif freePower >= minimalPower:
-        freeA = round( freePower / 240 / 1, 1)
+    elif freePower >= gPower['P1']['min']:
+        freeA = round( freePower / gnominalVolt / 1, 1)
+        if freeA > gmaxAmpere:
+            freeA = gmaxAmpere
         control = sendNRGkick(f'/control?current_set={str(freeA)}&phase_count=1&charge_pause=0')
 
     else:    
-        freeA = round( freePower / 240 / 3, 1)
+        # freeA = round( freePower / gnominalVolt / 3, 1)
         control = sendNRGkick(f'/control?charge_pause=1')
 
     return control
@@ -127,7 +159,7 @@ def setNRGkick(freePower=0, manual=False):
 
     if manual:
         printdebug(1,'manual Mode')        
-        control = switchPhase(maximalPowerP3)
+        control = switchPhase(gPower['P3']['max'])
 
     else:
         control = sendNRGkick('/values?powerflow')
@@ -143,39 +175,42 @@ def setNRGkick(freePower=0, manual=False):
             
             elif control['phase_count'] == 1:
 
-                if freePower < minimalPower:
+                if freePower < gPower['P1']['min']:
                     control = switchPhase(freePower)
 
-                elif freePower > maximalPowerP1:
+                elif freePower > gPower['P1']['max']:
                     control = switchPhase(freePower)
 
                 else:        
-                    freeA = round( freePower / 240, 1)
+                    freeA = round( freePower / gnominalVolt, 1)
                     control = sendNRGkick(f'/control?current_set={str(freeA)}')
             
             elif control['phase_count'] == 2:    
 
-                if freePower < minimalPowerP2:
+                if freePower < gPower['P2']['min']:
                     control = switchPhase(freePower)
 
-                elif freePower > maximalPowerP2:
+                elif freePower > gPower['P2']['max']:
                     control = switchPhase(freePower)
 
                 else:        
-                    freeA = round( freePower / 240 / 2, 1)
+                    freeA = round( freePower / gnominalVolt / 2, 1)
                     control = sendNRGkick(f'/control?current_set={str(freeA)}')
 
             elif control['phase_count'] == 3:    
+                control = switchPhase(freePower)
 
-                if freePower < minimalPowerP3:
+                '''
+                if freePower < gPower['P3']['min']:
                     control = switchPhase(freePower)
 
-                elif freePower >= maximalPowerP3:
-                    control = sendNRGkick(f'/control?current_set={12}')
+                elif freePower > gPower['P3']['max']:
+                    control = switchPhase(freePower)
 
                 else:        
-                    freeA = round( freePower / 240 / 3, 1)
+                    freeA = round( freePower / gnominalVolt / 3, 1)
                     control = sendNRGkick(f'/control?current_set={str(freeA)}')
+                '''
 
     control = sendNRGkick('/control')
     if control is not None:
@@ -192,12 +227,20 @@ def backgroundTask(loop=True):
     global gFreePowerSave
     global gFreePower
     global gManual
+    global gPowerOut
+    global gPowerIn
+    global gPowerProduced
 
     gBackgroundLoop = loop
     
     while True:
         # get tha actual value
-        freePower = round(getFreePower(SolarWatt), 1)
+        gPowerOut, gPowerIn, gPowerProduced = getFreePower(SolarWatt)
+        gPowerOut      = round(gPowerOut, 1)
+        gPowerIn       = round(gPowerIn, 1)
+        gPowerProduced = round(gPowerProduced, 1)
+        
+        freePower = gPowerOut - 500
 
         # use freePowerSave to get sone everage
         if gFreePowerSave == 0:
@@ -220,8 +263,6 @@ def backgroundTask(loop=True):
 
 # end backgroundTask
 
-# backgroundTask(False)
-
 curr_thread = threading.Thread(target=backgroundTask, args=())
 curr_thread.daemon = False
 curr_thread.start()
@@ -234,21 +275,22 @@ print('curr_thread',curr_thread)
 @app.route('/index')
 def index():
 
-    global gCurrent
-    global gPause
-    global gLimit
-    global gPhase
-
     return render_template('index.html',
-                           debug = gDebug,
+                           maxA = gmaxAmpere,
+                           minA = gminAmpere,
+                           Power = gPower,
+                           PowerOut = round(gPowerOut,1),
+                           PowerIn = round(gPowerIn,1),
+                           PowerProduced = round(gPowerProduced,1),
                            freePower = gFreePower,
                            freePowerSave = gFreePowerSave,
-                           manual = gManual,
                            current = gCurrent,
                            pause = gPause,
                            limit = gLimit,
                            phase = gPhase,
-                           timeout=60
+                           timeout=60,
+                           debug = gDebug,
+                           manual = gManual,
     )                   
 
 @app.route('/set_manual')
@@ -256,7 +298,14 @@ def set_manual():
 
     global gManual
 
-    gManual = not gManual
+    if gManual:
+        gManual = False
+        control = switchPhase(0)
+        printdebug(0,f'set_manual Control {control}')
+        time.sleep(10)
+        
+    else:
+        gManual = True
 
     waitFlag.set()
 
@@ -267,11 +316,24 @@ def set_debug():
 
     global gDebug
 
-    gDebug = not gDebug
+    gDebug += 1
+    if gDebug > 3:
+        gDebug = 0
 
     waitFlag.set()
 
     return index()             
+
+@app.route('/set_max_a')
+def set_max_a():
+
+    global gmaxAmpere
+    setAmpere(max = float(request.args.get('vmax_a')), min = 6)
+
+    waitFlag.set()
+
+    return index()             
+
 
 if __name__ == "__main__":
     serve(app, host="0.0.0.0", port=8001)
