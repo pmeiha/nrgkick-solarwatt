@@ -15,6 +15,7 @@ app = Flask(__name__)
 
 gFreePowerSave = 0
 gFreePower = 0
+gSetPower = 0
 gBackgroundLoop = True
 gManTime = 0
 gDebug = 0
@@ -209,6 +210,8 @@ def setNRGkick(freePower=0):
             elif control['phase_count'] == 3:    
                 control = switchPhase(freePower)
 
+    return freePower
+
     control = sendNRGkick('/control')
     if control is not None:
         gCurrent = control['current_set']
@@ -245,12 +248,12 @@ def backgroundTask(loop=True):
         gFreePower = round(( freePower + gFreePowerSave ) / 2, 1)
         printdebug(0, f'free {freePower} save {gFreePowerSave} freePower everage is: {gFreePower}')
 
-        setNRGkick(gFreePower)
+        gSetPower = setNRGkick(gFreePower)
 
         waitFlag.clear()
 
         if gBackgroundLoop:
-            waitFlag.wait(timeout=300)
+            waitFlag.wait(timeout=60)
 
         else:
             break
@@ -287,11 +290,12 @@ def index():
                            PowerProduced = round(gPowerProduced,1),
                            freePower = gFreePower,
                            freePowerSave = gFreePowerSave,
+                           setPower = gSetPower,
                            current = gCurrent,
                            pause = gPause,
                            limit = gLimit,
                            phase = gPhase,
-                           timeout=60,
+                           timeout=30,
                            debug = gDebug,
                            manual = ManTime,
     )                   
