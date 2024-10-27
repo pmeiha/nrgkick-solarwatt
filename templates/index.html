@@ -14,7 +14,7 @@
     <tr><form action="{{ url_for('set_max_a') }}" method="get">
         <td>Ampere min</td><td>{{minA }}</td>
         <td><button type="submit" id="max_a" name="action" value="max_a">max</button></td>
-        <td><input type="number" id="vmax_a" name="vmax_a" min="6" max="12" step="0.1" value="{{ maxA }}" >&#40;{{ maxA }}&#41;</td>
+        <td><input type="number" id="vmax_a" name="vmax_a" min="6" max="16" step="0.1" value="{{ maxA }}" >&#40;{{ maxA }}&#41;</td>
     </form></tr>
 
     <tr><td>P1 min</td><td>{{ Power['P1']['min'] }}</td><td>max</td><td>{{ Power['P1']['max'] }}</td></tr>
@@ -27,7 +27,7 @@
     <tr><td>pause</td><td>{{ pause }}</td><td></td><td></td></tr>
     <tr><td>limit</td><td>{{ limit }}</td><td></td><td></td></tr>
     <tr><td>phase</td><td>{{ phase }}</td><td></td><td></td></tr>
-    <tr><td>timeout</td><td>{{ timeout }}</td><td></td><td></td></tr>
+    <tr><td>timeout</td><td>{{ timeout }}</td><td>Update</td><td>{{ actTime }}</td></tr>
     <tr>
         <td><form action="{{ url_for('set_debug') }}" method="get"><button type="submit" id="debug" name="action" value="debug">Debug</button></form>
         </td><td>{{ debug }}</td>

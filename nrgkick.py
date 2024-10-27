@@ -37,8 +37,10 @@ gPower = {
         'max':gmaxAmpere * gnominalVolt
     },
     'P2' : {
-        'min':gminAmpere * gnominalVolt * 2,
-        'max':gmaxAmpere * gnominalVolt * 2
+        # 'min':gminAmpere * gnominalVolt * 2,
+        # 'max':gmaxAmpere * gnominalVolt * 2
+        'min':(gminAmpere * gnominalVolt * 3) - 1,
+        'max':(gminAmpere * gnominalVolt * 3) - 1
     },
     'P3' : {
         'min':gminAmpere * gnominalVolt * 3,
@@ -69,8 +71,10 @@ def setAmpere(max = 12, min = 6):
     gminAmpere = min
     gPower['P1']['min'] = gminAmpere * gnominalVolt #1440 # 6 * 240 
     gPower['P1']['max'] = gmaxAmpere * gnominalVolt #2880 # 12 * 240
-    gPower['P2']['min'] = gminAmpere * gnominalVolt * 2 #2880 # 6 * 240 * 2
-    gPower['P2']['max'] = gmaxAmpere * gnominalVolt * 2 #5760 # 12 * 240 * 2
+    # gPower['P2']['min'] = gminAmpere * gnominalVolt * 2 #2880 # 6 * 240 * 2
+    gPower['P2']['min'] = (gminAmpere * gnominalVolt * 3) - 1 #2880 # 6 * 240 * 2
+    # gPower['P2']['max'] = gmaxAmpere * gnominalVolt * 2 #5760 # 12 * 240 * 2
+    gPower['P2']['max'] = (gminAmpere * gnominalVolt * 3) - 1 #5760 # 12 * 240 * 2
     gPower['P3']['min'] = gminAmpere * gnominalVolt * 3 #4320 # 6 * 240 * 3
     gPower['P3']['max'] = gmaxAmpere * gnominalVolt * 3 #8640 # 12 * 240 * 3
 
@@ -169,6 +173,7 @@ def setNRGkick(freePower=0):
     if gManTime > time.time():
         printdebug(1,'manual Mode')
         control = switchPhase(gPower['P3']['max'])
+        freePower = gPower['P3']['max']
 
     else:
         gManTime = 0
@@ -210,8 +215,6 @@ def setNRGkick(freePower=0):
             elif control['phase_count'] == 3:    
                 control = switchPhase(freePower)
 
-    return freePower
-
     control = sendNRGkick('/control')
     if control is not None:
         gCurrent = control['current_set']
@@ -221,11 +224,14 @@ def setNRGkick(freePower=0):
             
     printdebug(0,f'Free Power {freePower} Control {control}')
 
+    return round(freePower, 1)
+
 def backgroundTask(loop=True):
 
     global gBackgroundLoop
     global gFreePowerSave
     global gFreePower
+    global gSetPower
     global gPowerOut
     global gPowerIn
     global gPowerProduced
@@ -296,6 +302,8 @@ def index():
                            limit = gLimit,
                            phase = gPhase,
                            timeout=30,
+                           #actTime = time.strftime('%d.%m.%Y %H:%M:%S'),
+                           actTime = time.strftime('%H:%M:%S'),
                            debug = gDebug,
                            manual = ManTime,
     )                   
