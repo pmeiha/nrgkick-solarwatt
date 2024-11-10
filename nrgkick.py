@@ -358,7 +358,12 @@ def set_limit():
 
     global gLimit
 
-    gLimit = round(float(request.args.get('vlimit'))*1000)
+    try:
+        gLimit = round(float(request.args.get('vlimit'))*1000)
+
+    except:
+        gLimit = 0
+        
     sendNRGkick(f'/control?energy_limit={ gLimit }')
 
     waitFlag.set()
