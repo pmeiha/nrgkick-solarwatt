@@ -23,16 +23,22 @@
     <tr><td>PowerProduced</td><td>{{ PowerProduced }}</td><td>PowerIn</td><td>{{ PowerIn }}</td></tr>
     <tr><td>PowerOut</td><td>{{ PowerOut }}</td><td>freePower</td><td>{{ freePower }}</td></tr>
     <tr><td>freePowerSave</td><td>{{ freePowerSave }}</td><td>setPower</td><td>{{ setPower }}</td></tr>
-    <tr><td>current</td><td>{{ current }}</td><td></td><td></td></tr>
-    <tr><td>pause</td><td>{{ pause }}</td><td></td><td></td></tr>
-    <tr><td>limit</td><td>{{ limit }}</td><td></td><td></td></tr>
-    <tr><td>phase</td><td>{{ phase }}</td><td></td><td></td></tr>
-    <tr><td>timeout</td><td>{{ timeout }}</td><td>Update</td><td>{{ actTime }}</td></tr>
     <tr>
         <td><form action="{{ url_for('set_debug') }}" method="get"><button type="submit" id="debug" name="action" value="debug">Debug</button></form>
         </td><td>{{ debug }}</td>
         <td></td><td></td>
-    </tr><tr>
+    </tr>
+    <tr><td>current</td><td>{{ current }}</td><td></td><td></td></tr>
+    <tr><td>pause</td><td>{{ pause }}</td><td></td><td></td></tr>
+    <tr><form action="{{ url_for('set_limit') }}" method="get">
+        <td><button type="submit" id="limit" name="action" value="limit">limit</button></td>
+        <td><input type="number" id="vlimit" name="vlimit" min="0" max="100" step="1" value="{{ limit }}" > kWh 
+        <td>&#40;{{ limit }}&#41;</td>
+        <td></td>
+    </form></tr>
+    <tr><td>phase</td><td>{{ phase }}</td><td></td><td></td></tr>
+    <tr><td>timeout</td><td>{{ timeout }}</td><td>Update</td><td>{{ actTime }}</td></tr>
+    <tr>
         <td><form action="{{ url_for('set_manual') }}" method="get"><button type="submit" id="Manual" name="action" value="Manual">Manual</button></form>
         </td><td>{{ manual }}</td>
         <td></td><td></td>

@@ -19,7 +19,7 @@ gSetPower = 0
 gBackgroundLoop = True
 gManTime = 0
 gDebug = 0
-gCurrent = 0 
+gCurrent = 0
 gPause = 0
 gLimit = 0
 gPhase = 0
@@ -39,7 +39,7 @@ gPower = {
     'P2' : {
         # 'min':gminAmpere * gnominalVolt * 2,
         # 'max':gmaxAmpere * gnominalVolt * 2
-        'min':(gminAmpere * gnominalVolt * 3) - 1,
+        'min':(gmaxAmpere * gnominalVolt * 1) + 1,
         'max':(gminAmpere * gnominalVolt * 3) - 1
     },
     'P3' : {
@@ -72,7 +72,7 @@ def setAmpere(max = 12, min = 6):
     gPower['P1']['min'] = gminAmpere * gnominalVolt #1440 # 6 * 240 
     gPower['P1']['max'] = gmaxAmpere * gnominalVolt #2880 # 12 * 240
     # gPower['P2']['min'] = gminAmpere * gnominalVolt * 2 #2880 # 6 * 240 * 2
-    gPower['P2']['min'] = (gminAmpere * gnominalVolt * 3) - 1 #2880 # 6 * 240 * 2
+    gPower['P2']['min'] = (gmaxAmpere * gnominalVolt * 1) + 1 #2880 # 6 * 240 * 2
     # gPower['P2']['max'] = gmaxAmpere * gnominalVolt * 2 #5760 # 12 * 240 * 2
     gPower['P2']['max'] = (gminAmpere * gnominalVolt * 3) - 1 #5760 # 12 * 240 * 2
     gPower['P3']['min'] = gminAmpere * gnominalVolt * 3 #4320 # 6 * 240 * 3
@@ -299,7 +299,7 @@ def index():
                            setPower = gSetPower,
                            current = gCurrent,
                            pause = gPause,
-                           limit = gLimit,
+                           limit = round(gLimit/1000),
                            phase = gPhase,
                            timeout=30,
                            #actTime = time.strftime('%d.%m.%Y %H:%M:%S'),
@@ -348,6 +348,18 @@ def set_max_a():
 
     global gmaxAmpere
     setAmpere(max = float(request.args.get('vmax_a')), min = 6)
+
+    waitFlag.set()
+
+    return index()             
+
+@app.route('/set_limit')
+def set_limit():
+
+    global gLimit
+
+    gLimit = round(float(request.args.get('vlimit'))*1000)
+    sendNRGkick(f'/control?energy_limit={ gLimit }')
 
     waitFlag.set()
 
