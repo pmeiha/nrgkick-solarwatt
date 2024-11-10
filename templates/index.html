@@ -32,8 +32,8 @@
     <tr><td>pause</td><td>{{ pause }}</td><td></td><td></td></tr>
     <tr><form action="{{ url_for('set_limit') }}" method="get">
         <td><button type="submit" id="limit" name="action" value="limit">limit</button></td>
-        <td><input type="number" id="vlimit" name="vlimit" min="0" max="100" step="1" value="{{ limit }}" size="3" maxlength="3" > kWh 
-        <td>&#40;{{ limit }}&#41;</td>
+        <td><input type="number" id="vlimit" name="vlimit" min="0" max="100" step="1" value="{{ limit }}" size="3" maxlength="3" > 
+        <td>&#40;{{ limit }}&#41; kWh</td>
         <td></td>
     </form></tr>
     <tr><td>phase</td><td>{{ phase }}</td><td></td><td></td></tr>
