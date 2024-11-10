@@ -283,7 +283,7 @@ def index():
     aTime = time.time()
     if gManTime > aTime:
         t = gManTime - aTime
-        ManTime = f'{int(t/3600)}:{int(math.fmod(t,3600)/60):2}'
+        ManTime = f'{int(t/3600)}:{int(math.fmod(t,3600)/60):02}'
     else:
         ManTime = "0:00"    
 
@@ -363,7 +363,7 @@ def set_limit():
 
     except:
         gLimit = 0
-        
+
     sendNRGkick(f'/control?energy_limit={ gLimit }')
 
     waitFlag.set()
