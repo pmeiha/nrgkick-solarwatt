@@ -14,7 +14,7 @@
     <tr><form action="{{ url_for('set_max_a') }}" method="get">
         <td>Ampere min</td><td>{{minA }}</td>
         <td><button type="submit" id="max_a" name="action" value="max_a">max</button></td>
-        <td><input type="number" id="vmax_a" name="vmax_a" min="6" max="16" step="0.1" value="{{ maxA }}" >&#40;{{ maxA }}&#41;</td>
+        <td><input type="number" id="vmax_a" name="vmax_a" min="6" max="16" step="0.1" value="{{ maxA }}" size="4" maxlength="4" >&#40;{{ maxA }}&#41;</td>
     </form></tr>
 
     <tr><td>P1 min</td><td>{{ Power['P1']['min'] }}</td><td>max</td><td>{{ Power['P1']['max'] }}</td></tr>
@@ -32,7 +32,7 @@
     <tr><td>pause</td><td>{{ pause }}</td><td></td><td></td></tr>
     <tr><form action="{{ url_for('set_limit') }}" method="get">
         <td><button type="submit" id="limit" name="action" value="limit">limit</button></td>
-        <td><input type="number" id="vlimit" name="vlimit" min="0" max="100" step="1" value="{{ limit }}" > kWh 
+        <td><input type="number" id="vlimit" name="vlimit" min="0" max="100" step="1" value="{{ limit }}" size="3" maxlength="3" > kWh 
         <td>&#40;{{ limit }}&#41;</td>
         <td></td>
     </form></tr>
