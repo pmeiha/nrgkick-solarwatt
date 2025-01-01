@@ -26,9 +26,10 @@ gPhase = 0
 gPowerOut = 0
 gPowerIn = 0
 gPowerProduced = 0
+gTimeout = 15
 
 gminAmpere = 6
-gmaxAmpere = 12
+gmaxAmpere = 16
 gnominalVolt = 240
 
 gPower = {
@@ -251,7 +252,8 @@ def backgroundTask(loop=True):
         if gFreePowerSave == 0:
             gFreePowerSave = freePower
 
-        gFreePower = round(( freePower + gFreePowerSave ) / 2, 1)
+        # gFreePower = round(( freePower + gFreePowerSave ) / 2, 1)
+        gFreePower = round(freePower, 1)
         printdebug(0, f'free {freePower} save {gFreePowerSave} freePower everage is: {gFreePower}')
 
         gSetPower = setNRGkick(gFreePower)
@@ -259,7 +261,7 @@ def backgroundTask(loop=True):
         waitFlag.clear()
 
         if gBackgroundLoop:
-            waitFlag.wait(timeout=60)
+            waitFlag.wait(timeout=gTimeout)
 
         else:
             break
@@ -301,7 +303,7 @@ def index():
                            pause = gPause,
                            limit = round(gLimit/1000),
                            phase = gPhase,
-                           timeout=30,
+                           timeout=gTimeout,
                            #actTime = time.strftime('%d.%m.%Y %H:%M:%S'),
                            actTime = time.strftime('%H:%M:%S'),
                            debug = gDebug,
