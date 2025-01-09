@@ -1,3 +1,4 @@
+
 from flask import Flask, render_template, request
 from waitress import serve
 #from dotenv import load_dotenv
@@ -27,10 +28,11 @@ gPowerOut = 0
 gPowerIn = 0
 gPowerProduced = 0
 gTimeout = 15
+gallreadyUsed = 0
 
 gminAmpere = 6
 gmaxAmpere = 16
-gnominalVolt = 240
+gnominalVolt = 235
 
 gPower = {
     'P1': {
@@ -158,7 +160,7 @@ def switchPhase(freePower=0):
 
     else:    
         # freeA = round( freePower / gnominalVolt / 3, 1)
-        control = sendNRGkick(f'/control?charge_pause=1')
+        control = sendNRGkick(f'/control?current_set=6&charge_pause=1')
         gPause = 1
 
     return control
@@ -170,6 +172,7 @@ def setNRGkick(freePower=0):
     global gLimit
     global gPhase
     global gManTime
+    global gallreadyUsed
 
     if gManTime > time.time():
         printdebug(1,'manual Mode')
@@ -180,8 +183,9 @@ def setNRGkick(freePower=0):
         gManTime = 0
         control = sendNRGkick('/values?powerflow')
         if control is not None:
-            allreadyUsed = control['powerflow']['total_active_power']
-            freePower += allreadyUsed
+            gallreadyUsed = control['powerflow']['total_active_power']
+            if freePower >= 0:
+                freePower += gallreadyUsed
 
         control = sendNRGkick('/control')
         if control is not None:
@@ -248,13 +252,8 @@ def backgroundTask(loop=True):
         
         freePower = gPowerOut - 500
 
-        # use freePowerSave to get sone everage
-        if gFreePowerSave == 0:
-            gFreePowerSave = freePower
-
-        # gFreePower = round(( freePower + gFreePowerSave ) / 2, 1)
         gFreePower = round(freePower, 1)
-        printdebug(0, f'free {freePower} save {gFreePowerSave} freePower everage is: {gFreePower}')
+        printdebug(0, f'free {freePower}')
 
         gSetPower = setNRGkick(gFreePower)
 
@@ -297,7 +296,7 @@ def index():
                            PowerIn = round(gPowerIn,1),
                            PowerProduced = round(gPowerProduced,1),
                            freePower = gFreePower,
-                           freePowerSave = gFreePowerSave,
+                           allreadyUsed = gallreadyUsed,
                            setPower = gSetPower,
                            current = gCurrent,
                            pause = gPause,
